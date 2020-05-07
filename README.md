@@ -7,7 +7,7 @@ Discord bot that will move players that will move players to different voice cha
 * Faheem Warsalee (github:FaheemWarsalee)
 * Nabeel Warsalee (github:nwarsalee)
 
-# Tools used
+## Tools used
 [Discord Developer Portal for creating Discord Bots](https://discord.com/developers/docs/intro)
 
 [Faceit API](https://developers.faceit.com)

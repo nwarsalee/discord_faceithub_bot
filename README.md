@@ -9,6 +9,7 @@ Discord bot that will move players that will move players to different voice cha
 
 # Tools used
 [Discord Developer Portal for creating Discord Bots](https://discord.com/developers/docs/intro)
+
 [Faceit API](https://developers.faceit.com)
 
 ## To-Do List

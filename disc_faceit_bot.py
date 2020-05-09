@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 import requests
+import json
 
 # Discord Bot token
 token = "<Enter your Discord Bot Token Here>"
@@ -115,6 +116,9 @@ async def move(ctx):
         await ctx.message.author.move_to(to)
 
     print(f"{ctx.message.author} has been moved to {to}")
+
+async def move(ctx, name, target):
+    await name.move_to(target)
 
 @client.command(aliases = ["ls", "LIST", "l"])
 async def list(ctx, channel):
@@ -241,8 +245,10 @@ async def start(ctx):
         print(f"User: {member.name} | ID: {member.id}")
         # Checking if they are in team 1
         if players[str(member.id)] in t1:
+            await move(ctx, member, get(ctx.guild.voice_channels, name = "CSGO"))
             print(f"Moving {member.name} to team 1 channel")
         elif players[str(member.id)] in t2:
+            await move(ctx, member, get(ctx.guild.voice_channels, name = "CSGO II"))
             print(f"Moving {member.name} to team 2 channel")
         else:
             print(f"Player {member.name} is not part of current match")
@@ -291,5 +297,6 @@ async def player(ctx, name: str):
 
     # Sending message to Discord text chat
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
-    
+
 client.run(token)
+                   

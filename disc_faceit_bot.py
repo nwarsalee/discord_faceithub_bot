@@ -243,6 +243,11 @@ async def start(ctx):
     # Traversing the list of members in the voice channel
     for member in channel_members:
         print(f"User: {member.name} | ID: {member.id}")
+
+        # Making sure current member is registered
+        if str(member.id) in players:
+            continue
+
         # Checking if they are in team 1
         if players[str(member.id)] in t1:
             await move(ctx, member, get(ctx.guild.voice_channels, name = "CSGO"))
@@ -298,5 +303,14 @@ async def player(ctx, name: str):
     # Sending message to Discord text chat
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
+@client.command()
+async def end(ctx):
+    # move members in team1 chat back to voice channel when game is done
+    for member in get(ctx.guild.voice_channels, name = "CSGO").members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+
+    # move members in team 2 chat back to voice channel when game is done
+    for member in get(ctx.guild.voice_channels, name = "CSGO II").members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+
 client.run(token)
-                   

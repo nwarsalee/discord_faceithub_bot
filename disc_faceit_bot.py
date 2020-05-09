@@ -11,18 +11,47 @@ url = "https://open.faceit.com/data/v4/"
 # Headers for GET request to the Faceit API
 headers = {"Authorization" : "Bearer <Enter the Faceit API Server Token here>", "content-type":"json"}
 
+
 #Players list: Key's are faceit usernames and values are discord usernames.
 players = {}
-def playersDict():
-    with open("players.txt", "r") as f:
-        line = f.readline()
-        while line != "":
-            faceit = line.split(":")[0]
-            discord = line.split(":")[1]
-            players[faceit] = discord
-            line = f.readline()
-playersDict()
-        
+# Hub information for hub id
+hub_id = ""
+#def playersDict():
+    #with open("players.txt", "r") as f:
+        #line = f.readline()
+        #while line != "":
+            #faceit = line.split(":")[0]
+            #discord = line.split(":")[1]
+            #players[faceit] = discord
+            #line = f.readline()
+
+# Calling player 
+#playersDict()
+
+# Function to load the file of players on startup and turn it into a dicitonary
+def load_players():
+    global players
+    try:
+        with open('players.txt') as json_file:
+            players = json.load(json_file)
+            print("Succesfully loaded file of players")
+            print(players)
+    except IOError:
+        print("Error reading file, may not exist...")
+
+def load_hubid():
+    global hub_id
+    diction = {}
+    try:
+        with open('hub_id.txt') as json_file:
+            diction = json.load(json_file)
+            hub_id = diction['hub_id']
+            print(f"Succesfully loaded hub id: {hub_id}")
+    except IOError:
+        print("Error reading file, may not exist...")
+
+load_players()
+load_hubid()
 
 #key to issue commands with the bot??
 client = commands.Bot(command_prefix = "!")
@@ -100,19 +129,29 @@ async def list(ctx, channel):
 
 @client.command(aliases = ["reg", "r"])
 async def register(ctx, faceit: str):
+    # Taking note of the user's discord name
     discord = ctx.message.author
 
-    if faceit in players:
+    print(discord.id)
+    print(players.values())
+    print(players)
+
+    # Checking if the faceit name is present in the dictionary
+    if faceit in players.values():
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
         print("tried registering an already previously registered user")
     else:
-        with open("players.txt", "a") as f:
-            f.write(f"{faceit}:{discord}\n")
-            players[faceit] = discord
-            await ctx.send(f"The faceit user, {faceit}, has been added to the list under {discord.mention}'s discord.")
-            print(f"Faceit: {faceit}    Discord: {discord}  has been added to the list of players")
+        #with open("players.txt", "a") as f:
+            #f.write(f"{faceit}:{discord}\n")
+            #players[faceit] = discord
+            #await ctx.send(f"The faceit user, {faceit}, has been added to the list under {discord.mention}'s discord.")
+            #print(f"Faceit: {faceit}    Discord: {discord}  has been added to the list of players")
+        players[discord.id] = faceit # Creating entry into the players dictionary for the new player
+        with open("players.txt", "w") as outfile:
+            json.dump(players, outfile)
+            print("Registered new player...")
 
-@client.command()
+@client.command(aliases = ["registerhub"])
 async def reghub(ctx, hub_name: str):
     my_param = {"name":hub_name, "offset":"0", "limit":"3"}
     req_url = url + "search/hubs"
@@ -155,8 +194,67 @@ async def reghub(ctx, hub_name: str):
     # Printing the success statements
     print(f"Succesfully registered hub {hub_name} with id {hub_id}...")
     await ctx.send(f"Succesfully registered hub {hub_name} as the primary hub for this bot.")
+
+
+@client.command()
+async def start(ctx):
+    # Building the request url and query parameters
+    my_param = {"offset":"0", "limit":"3"}
+    req_url = url + "hubs/" + hub_id + "/matches"
+
+    print(f"Searching for matches in hub {hub_id} using url {req_url}")
+
+    # Searching for the hub requested...
+    res = requests.get(req_url, headers=headers, params=my_param)
+
+    # Checking if the get request worked
+    if (res.status_code != 200):
+        print("Error requesting hub matches...")
+        await ctx.send(f"There was an error searching for the current match.")
+        return
+
+    # Taking note of the first match in the list
+    match_data = res.json()['items'][0]
+
+    # Checking if the match status is READY or ONGOING
+    if (match_data['status'] != 'READY' and match_data['status'] != 'ONGOING'):
+        print("There is no match that is READY or ONGOING...")
+        await ctx.send(f"There is no match that is READY or is ONGOING. Please try again when match is starting...")
+        return
+
+    # Looping through the members in the voice channel
+    channel_members = ctx.message.author.voice.channel.members
+
+    # Two dictionaries that will hold the information for both teams
+    t1 = get_player_names(match_data['teams']['faction1']['roster'])
+    t2 = get_player_names(match_data['teams']['faction2']['roster'])
+
+    print("T1 info")
+    print(t1)
+
+    print("T2 info")
+    print(t2)
+
+    print("Printing the members of this channel")
+    # Traversing the list of members in the voice channel
+    for member in channel_members:
+        print(f"User: {member.name} | ID: {member.id}")
+        # Checking if they are in team 1
+        if players[str(member.id)] in t1:
+            print(f"Moving {member.name} to team 1 channel")
+        elif players[str(member.id)] in t2:
+            print(f"Moving {member.name} to team 2 channel")
+        else:
+            print(f"Player {member.name} is not part of current match")
     
 
+    
+# Function that filters out all the other faceit player information and only makes a list of names
+def get_player_names(team):
+    player_list = []
+    for p in team:
+        player_list.append(p['nickname'])
+    return player_list
 
 @client.command(aliases = ["pl"])
 async def playersList(ctx):

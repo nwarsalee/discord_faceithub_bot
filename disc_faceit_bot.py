@@ -112,6 +112,51 @@ async def register(ctx, faceit: str):
             await ctx.send(f"The faceit user, {faceit}, has been added to the list under {discord.mention}'s discord.")
             print(f"Faceit: {faceit}    Discord: {discord}  has been added to the list of players")
 
+@client.command()
+async def reghub(ctx, hub_name: str):
+    my_param = {"name":hub_name, "offset":"0", "limit":"3"}
+    req_url = url + "search/hubs"
+
+    print(f"Searching for {hub_name}")
+
+    # Searching for the hub requested...
+    res = requests.get(req_url, headers=headers, params=my_param)
+
+    # Making sure the status is 200 (OK)
+    if (res.status_code != 200):
+        print(f"Error, status {res.status} when GET'ing info...")
+        await ctx.send(f"There was an error searching for the hub. Verify information and please try again...")
+        return
+
+    # Saving the list of search results
+    data = res.json()['items']
+    hub_id = ""
+
+    # looking through the search results to find the hub
+    for result in data:
+        if result['name'] == hub_name:
+            hub_id = result["competition_id"]
+            print("Found hub...")
+            break
+    
+    # Checking if a hub was actually found
+    if (len(hub_id) == 0):
+        print(f"Could not find a hub associated with {hub_name}")
+        await ctx.send(f"Could not find a hub named {hub_name}. Please verify the name and try again...")
+        return
+
+    # Making a dictionary that stores the hub_id
+    hub_dict = {'hub_id':hub_id}
+
+    # Sending hub id to a file
+    with open('hub_id.txt', 'w') as outfile:
+        json.dump(hub_dict, outfile)
+
+    # Printing the success statements
+    print(f"Succesfully registered hub {hub_name} with id {hub_id}...")
+    await ctx.send(f"Succesfully registered hub {hub_name} as the primary hub for this bot.")
+    
+
 
 @client.command(aliases = ["pl"])
 async def playersList(ctx):

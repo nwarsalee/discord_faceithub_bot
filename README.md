@@ -15,5 +15,8 @@ Discord bot that will move players that will move players to different voice cha
 ## To-Do List
 * ~~Get basic Discord bot functions working~~
 * ~~Succesfully request information from the Faceit API~~
-* Start merging functionality between the Faceit API and discord bot actions
-* Make bot automatically create text file...
+* ~~Start merging functionality between the Faceit API and discord bot actions~~
+* ~~Make bot automatically create text file...~~
+* Finish !start function
+* Start the !end function
+

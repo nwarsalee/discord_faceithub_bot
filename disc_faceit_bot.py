@@ -17,17 +17,6 @@ headers = {"Authorization" : "Bearer <Enter the Faceit API Server Token here>", 
 players = {}
 # Hub information for hub id
 hub_id = ""
-#def playersDict():
-    #with open("players.txt", "r") as f:
-        #line = f.readline()
-        #while line != "":
-            #faceit = line.split(":")[0]
-            #discord = line.split(":")[1]
-            #players[faceit] = discord
-            #line = f.readline()
-
-# Calling player 
-#playersDict()
 
 # Function to load the file of players on startup and turn it into a dicitonary
 def load_players():
@@ -68,74 +57,9 @@ async def purge(ctx, num = 1):
     await ctx.channel.purge(limit = num+1)
     print(f"{num} messages have been deleted from {ctx.channel}")
 
-# Command for bot to join the voice channel of the person who invoked the command
-@client.command()
-async def join(ctx):
-    channel = ctx.message.author.voice.channel
-    voice = get(client.voice_clients)
-
-    if voice and voice.is_connected():
-        await voice.move_to(channel)
-    else:
-        voice = await channel.connect()
-    await ctx.send(f'Joined {channel}')
-    print(f"GabeN has joined {channel}")
-
-# Command for bot to leave a discord voice channel
-@client.command()
-async def leave(ctx):
-    channel = ctx.message.author.voice.channel
-    voice = get(client.voice_clients)
-    
-    if voice and voice.is_connected:
-        await voice.disconnect()
-    await ctx.send(f"Left {channel}")
-    print(f"GabeN has left {channel}")
-
-# Useless command used to test a bot joining and leaving a discord voice channel
-@client.command(aliases = ["GabeN", "GABEN", "G", "g"])
-async def gaben(ctx):
-    url = "https://www.youtube.com/watch?v=1DC6RAr2xcM"
-
-    await ctx.send("Hi im Gabe Newell of Valve Software.")
-
-    #Joining functionality upon gaben call 
-    await join(ctx)
-
-    #Code for playing song goes here...
-
-
-    #Leaving functionality after playing gaben videos
-    await leave(ctx)
-    
-# Orgiginal move command for testing the move_to functionality
-@client.command()
-async def move(ctx):
-    channelName = ctx.message.author.voice.channel.name
-    to = get(ctx.guild.voice_channels, name = "Test")
-
-    if channelName == (to.name):
-        to = get(ctx.guild.voice_channels, name = "General")
-        await ctx.message.author.move_to(to)
-    else:
-        await ctx.message.author.move_to(to)
-
-    print(f"{ctx.message.author} has been moved to {to}")
-
-# move command overloaded that moves a person to a targeted discord voice channel
+# move command that moves a person to a targeted discord voice channel
 async def move(ctx, name, target):
     await name.move_to(target)
-
-# Command that lists all the members in a voice channel
-@client.command(aliases = ["ls", "LIST", "l"])
-async def list(ctx, channel):
-    members = get(ctx.guild.voice_channels, name = channel).members
-
-    print(f"Printing all members in voice channel {get(ctx.guild.voice_channels, name = channel)}")
-    for person in members:
-        await ctx.send(person)
-        print(f"{person}")
-    print(f"Finished printing all members in voice channel {get(ctx.guild.voice_channels, name = channel)}")
 
 
 # Command for registering a faceit user in relation to their discord id
@@ -153,11 +77,6 @@ async def register(ctx, faceit: str):
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
         print("tried registering an already previously registered user")
     else:
-        #with open("players.txt", "a") as f:
-            #f.write(f"{faceit}:{discord}\n")
-            #players[faceit] = discord
-            #await ctx.send(f"The faceit user, {faceit}, has been added to the list under {discord.mention}'s discord.")
-            #print(f"Faceit: {faceit}    Discord: {discord}  has been added to the list of players")
         players[discord.id] = faceit # Creating entry into the players dictionary for the new player
         with open("players.txt", "w") as outfile:
             json.dump(players, outfile)
@@ -212,7 +131,7 @@ async def reghub(ctx, hub_name: str):
 
 
 # Command for moving players to their respective team's voice channel for a CS 10 Man
-@client.command(aliases = "START")
+@client.command(aliases = ["START"])
 async def start(ctx):
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
@@ -286,15 +205,9 @@ async def playersList(ctx):
 
     print(f"Printing all players in the list of players")
     for key in players:
-        await ctx.send(f"Faceit: {key}         Discord: {players[key]}")
-        print(f"Faceit: {key}         Discord: {players[key]}")
+        await ctx.send(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
+        print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
     print(f"Finsished printing all players in the list of players")
-
-# Command used to test a bot creating a voice channel
-@client.command(aliases = ["VC"])
-async def vc(ctx, name = "new VC"):
-        await ctx.guild.create_voice_channel(name)
-        print(f"A new voice channel, {name}, has been created.")
 
 # Command used to gather information from faceit api regarding a specified player
 @client.command()
@@ -319,7 +232,7 @@ async def player(ctx, name: str):
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
 # Command used to move all teams back to one voice channel upon the end of a CS 10 man game
-@client.command(aliases = "END")
+@client.command(aliases = ["END"])
 async def end(ctx):
     # move members in team1 chat back to voice channel when game is done
     for member in get(ctx.guild.voice_channels, name = "CSGO").members:

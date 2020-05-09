@@ -62,11 +62,13 @@ client = commands.Bot(command_prefix = "!")
 async def on_ready():
    print("Bot is ready")
 
+# Command to delete a specified amount of messages
 @client.command()
 async def purge(ctx, num = 1):
     await ctx.channel.purge(limit = num+1)
     print(f"{num} messages have been deleted from {ctx.channel}")
 
+# Command for bot to join the voice channel of the person who invoked the command
 @client.command()
 async def join(ctx):
     channel = ctx.message.author.voice.channel
@@ -79,6 +81,7 @@ async def join(ctx):
     await ctx.send(f'Joined {channel}')
     print(f"GabeN has joined {channel}")
 
+# Command for bot to leave a discord voice channel
 @client.command()
 async def leave(ctx):
     channel = ctx.message.author.voice.channel
@@ -89,6 +92,7 @@ async def leave(ctx):
     await ctx.send(f"Left {channel}")
     print(f"GabeN has left {channel}")
 
+# Useless command used to test a bot joining and leaving a discord voice channel
 @client.command(aliases = ["GabeN", "GABEN", "G", "g"])
 async def gaben(ctx):
     url = "https://www.youtube.com/watch?v=1DC6RAr2xcM"
@@ -104,6 +108,7 @@ async def gaben(ctx):
     #Leaving functionality after playing gaben videos
     await leave(ctx)
     
+# Orgiginal move command for testing the move_to functionality
 @client.command()
 async def move(ctx):
     channelName = ctx.message.author.voice.channel.name
@@ -117,9 +122,11 @@ async def move(ctx):
 
     print(f"{ctx.message.author} has been moved to {to}")
 
+# move command overloaded that moves a person to a targeted discord voice channel
 async def move(ctx, name, target):
     await name.move_to(target)
 
+# Command that lists all the members in a voice channel
 @client.command(aliases = ["ls", "LIST", "l"])
 async def list(ctx, channel):
     members = get(ctx.guild.voice_channels, name = channel).members
@@ -131,6 +138,7 @@ async def list(ctx, channel):
     print(f"Finished printing all members in voice channel {get(ctx.guild.voice_channels, name = channel)}")
 
 
+# Command for registering a faceit user in relation to their discord id
 @client.command(aliases = ["reg", "r"])
 async def register(ctx, faceit: str):
     # Taking note of the user's discord name
@@ -153,9 +161,11 @@ async def register(ctx, faceit: str):
         players[discord.id] = faceit # Creating entry into the players dictionary for the new player
         with open("players.txt", "w") as outfile:
             json.dump(players, outfile)
+            await ctx.send(f"The faceit user, {faceit}, has been added to the list under {discord.mention}'s discord.")
             print("Registered new player...")
 
-@client.command(aliases = ["registerhub"])
+# Command for registering a faceit hub
+@client.command(aliases = ["registerhub", "rh"])
 async def reghub(ctx, hub_name: str):
     my_param = {"name":hub_name, "offset":"0", "limit":"3"}
     req_url = url + "search/hubs"
@@ -198,9 +208,11 @@ async def reghub(ctx, hub_name: str):
     # Printing the success statements
     print(f"Succesfully registered hub {hub_name} with id {hub_id}...")
     await ctx.send(f"Succesfully registered hub {hub_name} as the primary hub for this bot.")
+    load_hubid()
 
 
-@client.command()
+# Command for moving players to their respective team's voice channel for a CS 10 Man
+@client.command(aliases = "START")
 async def start(ctx):
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
@@ -267,6 +279,7 @@ def get_player_names(team):
         player_list.append(p['nickname'])
     return player_list
 
+# Command used to display the list of all registered players
 @client.command(aliases = ["pl"])
 async def playersList(ctx):
     global players
@@ -277,11 +290,13 @@ async def playersList(ctx):
         print(f"Faceit: {key}         Discord: {players[key]}")
     print(f"Finsished printing all players in the list of players")
 
+# Command used to test a bot creating a voice channel
 @client.command(aliases = ["VC"])
 async def vc(ctx, name = "new VC"):
         await ctx.guild.create_voice_channel(name)
         print(f"A new voice channel, {name}, has been created.")
 
+# Command used to gather information from faceit api regarding a specified player
 @client.command()
 async def player(ctx, name: str):
     print(name)
@@ -303,7 +318,8 @@ async def player(ctx, name: str):
     # Sending message to Discord text chat
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
-@client.command()
+# Command used to move all teams back to one voice channel upon the end of a CS 10 man game
+@client.command(aliases = "END")
 async def end(ctx):
     # move members in team1 chat back to voice channel when game is done
     for member in get(ctx.guild.voice_channels, name = "CSGO").members:

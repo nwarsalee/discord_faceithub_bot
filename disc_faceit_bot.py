@@ -4,13 +4,31 @@ from discord.utils import get
 import requests
 import json
 
-# Discord Bot token
-token = "<Enter your Discord Bot Token Here>"
-
 # Faceit API information
 url = "https://open.faceit.com/data/v4/"
 # Headers for GET request to the Faceit API
-headers = {"Authorization" : "Bearer <Enter the Faceit API Server Token here>", "content-type":"json"}
+
+#server_config stores all information on discord servers, registered faceit hubs, registered players.
+server_config = {}
+# Hub information for hub id
+hub_id = ""
+
+#reads the discord bot's token from a file called token.txt
+def read_token():
+    with open("token.txt", "r") as f:
+        lines = f.readlines()
+        return lines[0].strip()
+
+# Reads the faceit API token from a file called faceitAPI.txt
+def read_api_token():
+    with open("faceitAPI.txt", "r") as f:
+        lines = f.readlines()
+        return lines[0].strip()
+
+# Discord Bot token and Faceit API token 
+token = read_token()
+headers = {"Authorization" : f"Bearer {read_api_token()}", "content-type":"json"}
+
 
 # Function that loads the server config text file
 def load_config():

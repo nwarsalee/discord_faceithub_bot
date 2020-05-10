@@ -97,6 +97,7 @@ async def register(ctx, faceit: str):
         print("tried registering an already previously registered user")
     else:
         server_config[str(ctx.guild.id)]['players'][discord.id] = faceit # Creating entry into the players dictionary for the new player
+        await ctx.send(f"Faceit user, {faceit}, has been registered under {discord.mention}'s Discord.'")
         save_config()
 
 # Command for registering a faceit hub
@@ -192,9 +193,11 @@ async def start(ctx):
     # Traversing the list of members in the voice channel
     for member in channel_members:
         print(f"User: {member.name} | ID: {member.id}")
+        print(server_config[str(ctx.guild.id)]['players'][str(member.id)])
+        print(str(member.id) in server_config[str(ctx.guild.id)]['players'])
 
         # Making sure current member is registered
-        if str(member.id) in server_config[str(ctx.guild.id)]['players']:
+        if str(member.id) not in server_config[str(ctx.guild.id)]['players']:
             continue
 
         # Checking if they are in team 1

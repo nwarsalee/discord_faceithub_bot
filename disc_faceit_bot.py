@@ -96,7 +96,7 @@ async def register(ctx, faceit: str):
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
         print("tried registering an already previously registered user")
     else:
-        server_config[str(ctx.guild.id)]['players'][discord.id] = faceit # Creating entry into the players dictionary for the new player
+        server_config[str(ctx.guild.id)]['players'][str(discord.id)] = faceit # Creating entry into the players dictionary for the new player
         await ctx.send(f"Faceit user, {faceit}, has been registered under {discord.mention}'s Discord.'")
         save_config()
 
@@ -152,6 +152,9 @@ async def reghub(ctx, hub_name: str):
 # Command for moving players to their respective team's voice channel for a CS 10 Man
 @client.command(aliases = ["START"])
 async def start(ctx):
+    # Checking if hte server is registered
+    check_server(ctx)
+
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
     req_url = url + "hubs/" + server_config[str(ctx.guild.id)]['hub']['hub_id'] + "/matches"
@@ -160,6 +163,12 @@ async def start(ctx):
 
     # Searching for the hub requested...
     res = requests.get(req_url, headers=headers, params=my_param)
+
+    # Checking if they have registered a hub under this server
+    if server_config[str(ctx.guild.id)]['hub']['hub_id'] == '':
+        print("Error, no hub has been registered...")
+        await ctx.send("Can't start until a hub is registered under this server...")
+        return
 
     # Checking if the get request worked
     if (res.status_code != 200):
@@ -171,10 +180,10 @@ async def start(ctx):
     match_data = res.json()['items'][0]
 
     # Checking if the match status is READY or ONGOING
-    if (match_data['status'] != 'READY' and match_data['status'] != 'ONGOING'):
-        print("There is no match that is READY or ONGOING...")
-        await ctx.send(f"There is no match that is READY or is ONGOING. Please try again when match is starting...")
-        return
+    #if (match_data['status'] != 'READY' and match_data['status'] != 'ONGOING'):
+        #print("There is no match that is READY or ONGOING...")
+        #await ctx.send(f"There is no match that is READY or is ONGOING. Please try again when match is starting...")
+        #return
 
     # Looping through the members in the voice channel
     channel_members = ctx.message.author.voice.channel.members
@@ -193,11 +202,11 @@ async def start(ctx):
     # Traversing the list of members in the voice channel
     for member in channel_members:
         print(f"User: {member.name} | ID: {member.id}")
-        print(server_config[str(ctx.guild.id)]['players'][str(member.id)])
-        print(str(member.id) in server_config[str(ctx.guild.id)]['players'])
+        print(server_config[str(ctx.guild.id)]['players'].keys())
 
         # Making sure current member is registered
-        if str(member.id) not in server_config[str(ctx.guild.id)]['players']:
+        if str(member.id) not in server_config[str(ctx.guild.id)]['players'].keys():
+            print(f"Member {member.name} is not registered...")
             continue
 
         # Checking if they are in team 1
@@ -222,7 +231,15 @@ def get_player_names(team):
 async def playersList(ctx):
     global server_config
 
+    # Making sure the server is registered
+    check_server(ctx)
+
     players = server_config[str(ctx.guild.id)]['players']
+
+    # Checking case where there are no players registered
+    if len(players.keys()) == 0:
+        print("There is no one registered yet...")
+        await ctx.send("No players registered on this server...")
 
     print(f"Printing all players in the list of players")
     for key in players:

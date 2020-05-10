@@ -17,6 +17,10 @@ Discord bot that will move players that will move players to different voice cha
 * ~~Succesfully request information from the Faceit API~~
 * ~~Start merging functionality between the Faceit API and discord bot actions~~
 * ~~Make bot automatically create text file...~~
-* Finish !start function
-* Start the !end function
+* ~~Finish !start function~~
+* ~~Start the !end function~~
+* ~~Add multi discord server support (one file to store different server preferences)~~
+* Create a set command for both target voice channels (team 1 and team 2) and to set what voice channel is the lobby
+* !help command that outlines the server commands
+* Allow people to update information (!update ?)
 

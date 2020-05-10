@@ -19,6 +19,7 @@ Discord bot that will move players that will move players to different voice cha
 * ~~Make bot automatically create text file...~~
 * ~~Finish !start function~~
 * ~~Start the !end function~~
+* ~~Deploy on heroku~~
 * ~~Add multi discord server support (one file to store different server preferences)~~
 * Create a set command for both target voice channels (team 1 and team 2) and to set what voice channel is the lobby
 * !help command that outlines the server commands

@@ -6,12 +6,9 @@ import json
 
 # Faceit API information
 url = "https://open.faceit.com/data/v4/"
-# Headers for GET request to the Faceit API
 
 #server_config stores all information on discord servers, registered faceit hubs, registered players.
 server_config = {}
-# Hub information for hub id
-hub_id = ""
 
 #reads the discord bot's token from a file called token.txt
 def read_token():
@@ -27,6 +24,8 @@ def read_api_token():
 
 # Discord Bot token and Faceit API token 
 token = read_token()
+
+# Headers for GET request to the Faceit API
 headers = {"Authorization" : f"Bearer {read_api_token()}", "content-type":"json"}
 
 

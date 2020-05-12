@@ -180,10 +180,10 @@ async def start(ctx):
     match_data = res.json()['items'][0]
 
     # Checking if the match status is READY or ONGOING
-    #if (match_data['status'] != 'READY' and match_data['status'] != 'ONGOING'):
-        #print("There is no match that is READY or ONGOING...")
-        #await ctx.send(f"There is no match that is READY or is ONGOING. Please try again when match is starting...")
-        #return
+    if (match_data['status'] != 'READY' and match_data['status'] != 'ONGOING'):
+        print("There is no match that is READY or ONGOING...")
+        await ctx.send(f"There is no match that is READY or is ONGOING. Please try again when match is starting...")
+        return
 
     # Looping through the members in the voice channel
     channel_members = ctx.message.author.voice.channel.members

@@ -1,6 +1,6 @@
 # Discord Faceit Hub Bot Setup
 1. Invite the bot to your server
-2. Ensure that your discord server has two voice channels called "CSGO", "CSGO II" and "Voice Chat" (currently bot only moves people to those two exactly named channels)
+2. Ensure that your discord server has two voice channels called "CSGO", "CSGO II" and "Voice Chat" (currently bot only moves people to those channels with those names)
 3. Type **"!registerhub <`hub_name`>"** where `hub_name` is the name of your Faceit hub as it appears on Faceit
 4. Ensure that every player who will be moved by the bot is registered with the bot. 
 Tell the user to type **"!register <`faceit_name`>"** where `faceit_name` is the faceit name of the user as it appears on faceit.

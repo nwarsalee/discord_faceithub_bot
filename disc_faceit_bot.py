@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.utils import get
 import requests
 import json
+import pymongo
 
 # Faceit API information
 url = "https://open.faceit.com/data/v4/"
@@ -39,7 +40,6 @@ def load_config():
     except IOError:
         print("Error reading file, may not exist...")
 
-
 # Function to check whether a discord server is registered in the server_config dict
 def check_server(ctx):
     global server_config
@@ -66,7 +66,6 @@ load_config()
 
 #key to issue commands with the bot??
 client = commands.Bot(command_prefix = "!")
-client.remove_command('help')
 
 #Checks if the bot is ready and if it is it prints Bot is ready
 @client.event
@@ -220,7 +219,18 @@ async def start(ctx):
             print(f"Moving {member.name} to team 2 channel")
         else:
             print(f"Player {member.name} is not part of current match")
-    
+
+# Command used to move all teams back to one voice channel upon the end of a CS 10 man game
+@client.command(aliases = ["END"])
+async def end(ctx):
+    # move members in team1 chat back to voice channel when game is done
+    for member in get(ctx.guild.voice_channels, name = "CSGO").members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+
+    # move members in team 2 chat back to voice channel when game is done
+    for member in get(ctx.guild.voice_channels, name = "CSGO II").members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+
 # Function that filters out all the other faceit player information and only makes a list of names
 def get_player_names(team):
     player_list = []
@@ -274,23 +284,11 @@ async def player(ctx, name: str):
     # Sending message to Discord text chat
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
-# Command used to move all teams back to one voice channel upon the end of a CS 10 man game
-@client.command(aliases = ["END"])
-async def end(ctx):
-    # move members in team1 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = "CSGO").members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
-
-    # move members in team 2 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = "CSGO II").members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
-
+# Command used to give the general settings of the server
 @client.command()
 async def info(ctx):
     global server_config
     check_server(ctx)
-
-    #print(server_config[str(ctx.guild.id)]['hub']['hub_id'] == '')
 
     if(server_config[str(ctx.guild.id)]['hub']['hub_id'] == ''):
         await ctx.send("There is no hub registered to this server.")
@@ -303,5 +301,19 @@ async def info(ctx):
         await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
         await playersList(ctx)
 
+# Command for help command
+@client.command()
+async def help(ctx):
+    # Building the help string
+    help_string = "Available commands \n"
+    help_string += "{:8} {:20} {}\n".format("Command ", "| Argument", "| Description")
+    help_string += "-------------------------------------------------------------\n"
+    help_string += "{:10} {:20} {}\n".format("!help", "", "Provides a list of available commands")
+    help_string += "{:10} {:20} {}\n".format("!reghub", "<hub_name>", "Assigns faceit hub with name <hub_name> to discord server")
+    help_string += "{:10} {:20} {}\n".format("!reg", "<faceit_name>", "Assigns faceit player <faceit_name> with the discord user who invoked to command")
+    help_string += "{:10} {:20} {}\n".format("!pl", "", "Provides a list of all the players that have registered their faceit name to the server")
+    help_string += "{:10} {:20} {}\n".format("!info", "", "Displays the information about the Faceit hub that is registered")
+
+    await ctx.send(help_string)
 
 client.run(token)

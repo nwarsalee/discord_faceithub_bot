@@ -24,9 +24,9 @@ Discord bot that will move players that will move players to different voice cha
 * ~~Moved API token and discord bot token to separate file~~
 * ~~Polished build for heroku and tested it~~
 * ~~Fix !playerList command so that it sends a giant string instead of sending separate messages~~
-* Create a set command for both target voice channels (team 1 and team 2) and to set what voice channel is the lobby
-* !help command that outlines the server commands
-* Create !info command
+* ``Create a set command for both target voice channels (team 1 and team 2) and to set what voice channel is the lobby``
+* ``!help command that outlines the server commands``
+* ``Create !info command``
 * Allow people to update information (!update ?)
 * Implement webhook for bot automation
 

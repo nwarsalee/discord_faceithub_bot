@@ -10,6 +10,9 @@ url = "https://open.faceit.com/data/v4/"
 
 #server_config stores all information on discord servers, registered faceit hubs, registered players.
 server_config = {}
+vc_gen = "Voice Chat"
+vc_t1 = "CSGO"
+vc_t2 = "CSGO II"
 
 #reads the discord bot's token from a file called token.txt
 def read_token():
@@ -193,6 +196,10 @@ async def start(ctx):
     t1 = get_player_names(match_data['teams']['faction1']['roster'])
     t2 = get_player_names(match_data['teams']['faction2']['roster'])
 
+    #team 1 and team 2 voice channels
+    global vc_t1
+    global vc_t2
+
     print("T1 info")
     print(t1)
 
@@ -212,10 +219,10 @@ async def start(ctx):
 
         # Checking if they are in team 1
         if server_config[str(ctx.guild.id)]['players'][str(member.id)] in t1:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = "CSGO"))
+            await move(ctx, member, get(ctx.guild.voice_channels, name = vc_t1))
             print(f"Moving {member.name} to team 1 channel")
         elif server_config[str(ctx.guild.id)]['players'][str(member.id)] in t2:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = "CSGO II"))
+            await move(ctx, member, get(ctx.guild.voice_channels, name = vc_t2))
             print(f"Moving {member.name} to team 2 channel")
         else:
             print(f"Player {member.name} is not part of current match")
@@ -223,13 +230,43 @@ async def start(ctx):
 # Command used to move all teams back to one voice channel upon the end of a CS 10 man game
 @client.command(aliases = ["END"])
 async def end(ctx):
+    global vc_gen
+
     # move members in team1 chat back to voice channel when game is done
     for member in get(ctx.guild.voice_channels, name = "CSGO").members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+        await move(ctx, member, get(ctx.guild.voice_channels, name = vc_gen))
 
     # move members in team 2 chat back to voice channel when game is done
     for member in get(ctx.guild.voice_channels, name = "CSGO II").members:
         await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+
+# Command that changes what the lobby voice channel is
+@client.command(aliases = ["setg"])
+async def setgen(ctx, general):
+    global vc_gen
+    vc_gen = general
+    await ctx.send(f"Lobby voice channel has been changed to {vc_gen}")
+
+# Command that changes what team 1's voice channel is
+@client.command(aliases = ["set1"])
+async def sett1(ctx, team1):
+    global vc_t1
+    vc_t1 = team1
+    await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
+
+# Command that changes what team 1's voice channel is
+@client.command(aliases = ["set1"])
+async def sett2(ctx, team2):
+    global vc_t2
+    vc_t2 = team2
+    await ctx.send(f"Team 2 voice channel has been changed to {vc_t2} ")    
+
+# Command that changes the voice channels for General, Team 1 and Team 2
+@client.command()
+async def setvcs(ctx, general, team1, team2):
+    await setgen(ctx, general)
+    await sett1(ctx, team1)
+    await sett2(ctx, team2)
 
 # Function that filters out all the other faceit player information and only makes a list of names
 def get_player_names(team):
@@ -313,6 +350,13 @@ async def help(ctx):
     help_string += "{:10} {:20} {}\n".format("!reg", "<faceit_name>", "Assigns faceit player <faceit_name> with the discord user who invoked to command")
     help_string += "{:10} {:20} {}\n".format("!pl", "", "Provides a list of all the players that have registered their faceit name to the server")
     help_string += "{:10} {:20} {}\n".format("!info", "", "Displays the information about the Faceit hub that is registered")
+    help_string += "{:10} {:20} {}\n".format("!start", "", "Moves all players to their respective team's voice channel")
+    help_string += "{:10} {:20} {}\n".format("!end", "", "Moves all players back to general voice channel")
+    help_string += "{:10} {:20} {}\n".format("!setgen", "<voice_channel_name>", "Assigns the lobby voice channel to <voice_channel_name>")
+    help_string += "{:10} {:20} {}\n".format("!sett1", "<voice_channel_name>", "Assigns team 1's voice channel to <voice_channel_name>")
+    help_string += "{:10} {:20} {}\n".format("!sett2", "<voice_channel_name>", "Assigns team 2's voice channel to <voice_channel_name>")
+    help_string += "{:10} {:20} {}\n".format("!setvcs", "<voice_channel_name1>, <voice_channel_name2>, <voice_channel_name3>", "Changes the lobby, team 1 and team 2's voice channels respectively")
+
 
     await ctx.send(help_string)
 

@@ -192,7 +192,7 @@ async def start(ctx):
     # Looping through the members in the voice channel
     channel_members = ctx.message.author.voice.channel.members
 
-    # Two lists that will hold the information for both teams
+    # Two lists that will hold the information for both teams.
     t1 = get_player_names(match_data['teams']['faction1']['roster'])
     t2 = get_player_names(match_data['teams']['faction2']['roster'])
 

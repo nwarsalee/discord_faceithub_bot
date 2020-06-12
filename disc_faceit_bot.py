@@ -255,7 +255,7 @@ async def sett1(ctx, team1):
     await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
 
 # Command that changes what team 1's voice channel is
-@client.command(aliases = ["set1"])
+@client.command(aliases = ["set2"])
 async def sett2(ctx, team2):
     global vc_t2
     vc_t2 = team2

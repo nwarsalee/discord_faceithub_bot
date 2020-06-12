@@ -77,6 +77,7 @@ load_config()
 
 #key to issue commands with the bot??
 client = commands.Bot(command_prefix = "!")
+client.remove_command('help')
 
 #Checks if the bot is ready and if it is it prints Bot is ready
 @client.event

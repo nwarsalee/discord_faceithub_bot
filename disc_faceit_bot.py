@@ -290,13 +290,13 @@ async def playersList(ctx):
     if len(players.keys()) == 0:
         print("There is no one registered yet...")
         await ctx.send("No players registered on this server...")
-
-    print(f"Printing all players in the list of players")
-    for key in players:
-        pString = pString + f"Discord ID: {key}\t\tFaceit Username: {players[key]}\n"
-        print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
-
-    if len(players.keys()) > 0:
+    else:
+        # Creates String for all players that have been registered
+        for key in players:
+            pString = pString + f"Discord ID: {key}\t\tFaceit Username: {players[key]}\n"
+            print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
+        # Prints the string of registered players to discord
+        print(f"Printing all players in the list of players")
         await ctx.send(pString)
         print(f"Finished printing all players in the list of players")
 
@@ -339,6 +339,7 @@ async def info(ctx):
         await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
         await playersList(ctx)
 
+    #Printing the set voice channels
     print("printing lobby voice channel")
     await ctx.send(f"Lobby Voice Channel:     {vc_gen}")
 

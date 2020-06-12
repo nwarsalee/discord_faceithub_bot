@@ -33,7 +33,7 @@ def read_api_token():
 token = os.environ.get('DISCORD_TOKEN')
 
 # Mongodb URI
-mongoDb = os.environ.get('MONGODB_DB')
+mongoDb = os.environ.get('MONGODB_URI')
 
 # Headers for GET request to the Faceit API
 headers = {"Authorization" : f"Bearer {os.environ.get('FACEIT_API_KEY')}", "content-type":"json"}
@@ -263,7 +263,7 @@ async def sett1(ctx, team1):
     await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
 
 # Command that changes what team 1's voice channel is
-@client.command(aliases = ["set1"])
+@client.command(aliases = ["set2"])
 async def sett2(ctx, team2):
     global vc_t2
     vc_t2 = team2

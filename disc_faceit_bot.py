@@ -296,8 +296,9 @@ async def playersList(ctx):
         pString = pString + f"Discord ID: {key}\t\tFaceit Username: {players[key]}\n"
         print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
 
-    await ctx.send(pString)
-    print(f"Finished printing all players in the list of players")
+    if len(players.keys()) > 0:
+        await ctx.send(pString)
+        print(f"Finished printing all players in the list of players")
 
 # Command used to gather information from faceit api regarding a specified player
 @client.command()

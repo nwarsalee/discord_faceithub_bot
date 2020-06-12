@@ -17,15 +17,17 @@ vc_t2 = "CSGO II"
 
 #reads the discord bot's token from a file called token.txt
 def read_token():
-    with open("token.txt", "r") as f:
-        lines = f.readlines()
-        return lines[0].strip()
+    #with open("token.txt", "r") as f:
+    #    lines = f.readlines()
+    #    return lines[0].strip()
+    print("No file reading here...")
 
 # Reads the faceit API token from a file called faceitAPI.txt
 def read_api_token():
-    with open("faceitAPI.txt", "r") as f:
-        lines = f.readlines()
-        return lines[0].strip()
+    #with open("faceitAPI.txt", "r") as f:
+    #    lines = f.readlines()
+    #    return lines[0].strip()
+    print("No file reading here...")
 
 # Discord Bot token and Faceit API token 
 token = os.environ.get('DISCORD_TOKEN')

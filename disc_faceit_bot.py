@@ -4,6 +4,7 @@ from discord.utils import get
 import requests
 import json
 import pymongo
+import os
 
 # Faceit API information
 url = "https://open.faceit.com/data/v4/"
@@ -27,11 +28,13 @@ def read_api_token():
         return lines[0].strip()
 
 # Discord Bot token and Faceit API token 
-token = read_token()
+token = os.environ.get('DISCORD_TOKEN')
+
+# Mongodb URI
+mongoDb = os.environ.get('MONGODB_DB')
 
 # Headers for GET request to the Faceit API
-headers = {"Authorization" : f"Bearer {read_api_token()}", "content-type":"json"}
-
+headers = {"Authorization" : f"Bearer {os.environ.get('FACEIT_API_KEY')}", "content-type":"json"}
 
 # Function that loads the server config text file
 def load_config():

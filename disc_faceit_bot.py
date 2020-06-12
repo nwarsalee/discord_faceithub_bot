@@ -325,7 +325,7 @@ async def player(ctx, name: str):
 # Command used to give the general settings of the server
 @client.command()
 async def info(ctx):
-    global server_config
+    global server_config, vc_gen, vc_t1, vc_t2
     check_server(ctx)
 
     if(server_config[str(ctx.guild.id)]['hub']['hub_id'] == ''):
@@ -338,6 +338,15 @@ async def info(ctx):
         print("Printing registered players...")
         await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
         await playersList(ctx)
+
+    print("printing lobby voice channel")
+    await ctx.send(f"Lobby Voice Channel:     {vc_gen}")
+
+    print("printing team 1 voice channel")
+    await ctx.send(f"Team 1 Voice Channel:     {vc_t2}")
+
+    print("printing team 2 voice channel")
+    await ctx.send(f"Team 2 Voice Channel:     {vc_t1}")
 
 # Command for help command
 @client.command()

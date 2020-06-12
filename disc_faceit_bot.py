@@ -38,6 +38,9 @@ mongoDb = os.environ.get('MONGODB_DB')
 # Headers for GET request to the Faceit API
 headers = {"Authorization" : f"Bearer {os.environ.get('FACEIT_API_KEY')}", "content-type":"json"}
 
+# Printing environment variables
+print(f"ENV VARIABLES: Discord={0}\nFaceit={1}\nMongoDB={2}", token, os.environ.get('FACEIT_API_KEY'), mongoDb)
+
 # Function that loads the server config text file
 def load_config():
     global server_config

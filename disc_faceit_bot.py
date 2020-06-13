@@ -366,7 +366,6 @@ async def help(ctx):
     help_string += "{:10} {:20} {}\n".format("!sett2", "<voice_channel_name>", "Assigns team 2's voice channel to <voice_channel_name>")
     help_string += "{:10} {:20} {}\n".format("!setvcs", "<voice_channel_name1>, <voice_channel_name2>, <voice_channel_name3>", "Changes the lobby, team 1 and team 2's voice channels respectively")
 
-
     await ctx.send(help_string)
 
 client.run(token)

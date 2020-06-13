@@ -201,7 +201,7 @@ async def start(ctx):
     # Looping through the members in the voice channel
     channel_members = ctx.message.author.voice.channel.members
 
-    # Two lists that will hold the information for both teams
+    # Two lists that will hold the information for both teams.
     t1 = get_player_names(match_data['teams']['faction1']['roster'])
     t2 = get_player_names(match_data['teams']['faction2']['roster'])
 
@@ -299,14 +299,15 @@ async def playersList(ctx):
     if len(players.keys()) == 0:
         print("There is no one registered yet...")
         await ctx.send("No players registered on this server...")
-
-    print(f"Printing all players in the list of players")
-    for key in players:
-        pString = pString + f"Discord ID: {key}\t\tFaceit Username: {players[key]}\n"
-        print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
-
-    await ctx.send(pString)
-    print(f"Finished printing all players in the list of players")
+    else:
+        # Creates String for all players that have been registered
+        for key in players:
+            pString = pString + f"Discord ID: {key}\t\tFaceit Username: {players[key]}\n"
+            print(f"Discord ID: {key}\t\tFaceit Username: {players[key]}")
+        # Prints the string of registered players to discord
+        print(f"Printing all players in the list of players")
+        await ctx.send(pString)
+        print(f"Finished printing all players in the list of players")
 
 # Command used to gather information from faceit api regarding a specified player
 @client.command()
@@ -333,7 +334,7 @@ async def player(ctx, name: str):
 # Command used to give the general settings of the server
 @client.command()
 async def info(ctx):
-    global server_config
+    global server_config, vc_gen, vc_t1, vc_t2
     check_server(ctx)
 
     if(server_config[str(ctx.guild.id)]['hub']['hub_id'] == ''):
@@ -346,6 +347,16 @@ async def info(ctx):
         print("Printing registered players...")
         await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
         await playersList(ctx)
+
+    #Printing the set voice channels
+    print("printing lobby voice channel")
+    await ctx.send(f"Lobby Voice Channel:     {vc_gen}")
+
+    print("printing team 1 voice channel")
+    await ctx.send(f"Team 1 Voice Channel:     {vc_t2}")
+
+    print("printing team 2 voice channel")
+    await ctx.send(f"Team 2 Voice Channel:     {vc_t1}")
 
 # Command for help command
 @client.command()

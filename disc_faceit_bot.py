@@ -89,6 +89,11 @@ async def register(ctx, faceit: str):
     
     disc_server = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
 
+    # Checking if there is a parameter sent from the user.
+    if faceit == None:
+        await ctx.send(f"ERROR: {discord.mention} !reg requires a faceit username parameter...Please try '!reg faceit_username'")
+        return
+
     # Checking if the faceit name is present in the dictionary
     if faceit in disc_server['players'].values():
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
@@ -110,6 +115,11 @@ async def reghub(ctx, hub_name: str):
 
     # Searching for the hub requested...
     res = requests.get(req_url, headers=headers, params=my_param)
+
+    # Checking if there is a parameter sent from the user.
+    if hub_name == None:
+        await ctx.send(f"ERROR: {ctx.message.author.mention} !reghub requires a faceit hub name...Please try '!reghub faceit_hub_name'")
+        return
 
     # Making sure the status is 200 (OK)
     if (res.status_code != 200):
@@ -240,7 +250,9 @@ async def end(ctx):
     print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
     print(get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
 
-    # TODO: Add check to see if the voice channels that are set actually exist
+    # Check to see if all the channels exist
+    if channelExists(ctx, server_info['voice_settings']['t1']) == False or channelExists(ctx, server_info['voice_settings']['t2']) == False or channelExists(ctx, server_info['voice_settings']['general']) == False:
+        await ctx.send("One of the designated voice channels do not exist, make sure voice channels have been properly set before using !end command...")
 
     # move members in team1 chat back to voice channel when game is done
     for member in get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])).members:
@@ -363,27 +375,30 @@ async def info(ctx):
     check_server(ctx)
 
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    info_string = ""
 
     if(server_info['hub'] == ''):
-        await ctx.send("There is no hub registered to this server.")
+        info_string += ("There is no hub registered to this server.\n")
         print(f"Server has no registered hub...")
     else:
-        await ctx.send(f"Server has `{server_info['hub']['hub_name']}` registered as its primary hub...")
+        info_string += (f"Server has `{server_info['hub']['hub_name']}` registered as its primary hub...\n")
         print(f"Server has faceit hub w/ id: {server_info['hub']['hub_id']} registered as its primary hub...")
 
         print("Printing registered players...")
-        await ctx.send(f"Registered Players in {server_info['hub']['hub_name']}:")
-        await playersList(ctx)
+        info_string += (f"Registered Players in {server_info['hub']['hub_name']}:\n")
+        info_string += await playersList(ctx)
 
     #Printing the set voice channels
-    print("printing lobby voice channel")
-    await ctx.send(f"Lobby Voice Channel:     {server_info['voice_settings']['general']}")
+    print("printing lobby voice channel...")
+    info_string += (f"Lobby Voice Channel:     {server_info['voice_settings']['general']}\n")
 
-    print("printing team 1 voice channel")
-    await ctx.send(f"Team 1 Voice Channel:     {server_info['voice_settings']['t1']}")
+    print("printing team 1 voice channel...")
+    info_string +=(f"Team 1 Voice Channel:     {server_info['voice_settings']['t1']}\n")
 
-    print("printing team 2 voice channel")
-    await ctx.send(f"Team 2 Voice Channel:     {server_info['voice_settings']['t2']}")
+    print("printing team 2 voice channel...")
+    info_string += (f"Team 2 Voice Channel:     {server_info['voice_settings']['t2']}\n")
+
+    await ctx.send(info_string)
 
 # Command for help command
 @client.command()

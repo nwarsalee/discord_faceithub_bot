@@ -160,6 +160,9 @@ async def start(ctx):
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
     print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
     
+    # Check to see if all the channels exist
+    if channelExists(ctx, server_info['voice_settings']['t1']) == False or channelExists(ctx, server_info['voice_settings']['t2']) == False or channelExists(ctx, server_info['voice_settings']['general']) == False:
+        await ctx.send("One of the designated voice channels do not exist, make sure voice channels have been properly set before using !start command...")
 
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
@@ -250,6 +253,10 @@ async def end(ctx):
 # Command that changes what the lobby voice channel is
 @client.command(aliases = ["setg"])
 async def setgen(ctx, general):
+    if channelExists(ctx, general) == False:
+        await ctx.send(f"Voice channel '{general}' does not exist...")
+        return
+
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
     print(server_info)
     server_info['voice_settings']['general'] = general
@@ -259,6 +266,10 @@ async def setgen(ctx, general):
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set1"])
 async def sett1(ctx, team1):
+    if channelExists(ctx, team1) == False:
+        await ctx.send(f"Voice channel '{team1}' does not exist...")
+        return
+
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
     print(server_info)
     server_info['voice_settings']['t1'] = team1
@@ -268,6 +279,10 @@ async def sett1(ctx, team1):
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set2"])
 async def sett2(ctx, team2):
+    if channelExists(ctx, team2) == False:
+        await ctx.send(f"Voice channel '{team2}' does not exist...")
+        return
+
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
     print(server_info)
     server_info['voice_settings']['t2'] = team2
@@ -280,6 +295,14 @@ async def setvcs(ctx, general, team1, team2):
     await setgen(ctx, general)
     await sett1(ctx, team1)
     await sett2(ctx, team2)
+
+# Function that checks to see if a voice channel exists
+def channelExists(ctx, channel_name):
+    if get(ctx.guild.voice_channels, name = channel_name) == None:
+        return False
+    else:
+        return True
+
 
 # Function that filters out all the other faceit player information and only makes a list of names
 def get_player_names(team):

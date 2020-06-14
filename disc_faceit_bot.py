@@ -159,7 +159,7 @@ async def start(ctx):
     # Checking if hte server is registered
     check_server(ctx)
 
-    server_info = server_config_cl.find_one({"discord_server_id" : [str(ctx.guild.id)]})
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
 
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}

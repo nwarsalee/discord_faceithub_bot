@@ -9,71 +9,54 @@ import os
 # Faceit API information
 url = "https://open.faceit.com/data/v4/"
 
-#server_config stores all information on discord servers, registered faceit hubs, registered players.
-server_config = {}
-vc_gen = "Voice Chat"
-vc_t1 = "CSGO"
-vc_t2 = "CSGO II"
-
-#reads the discord bot's token from a file called token.txt
-def read_token():
-    #with open("token.txt", "r") as f:
-    #    lines = f.readlines()
-    #    return lines[0].strip()
-    print("No file reading here...")
-
-# Reads the faceit API token from a file called faceitAPI.txt
-def read_api_token():
-    #with open("faceitAPI.txt", "r") as f:
-    #    lines = f.readlines()
-    #    return lines[0].strip()
-    print("No file reading here...")
+# Object to database collection
+server_config_cl = None
 
 # Discord Bot token and Faceit API token 
 token = os.environ.get('DISCORD_TOKEN')
 
-# Mongodb URI
-mongoDb = os.environ.get('MONGODB_URI')
+faceit_api_key = os.environ.get('FACEIT_API_KEY')
 
 # Headers for GET request to the Faceit API
-headers = {"Authorization" : f"Bearer {os.environ.get('FACEIT_API_KEY')}", "content-type":"json"}
+headers = {"Authorization" : f"Bearer {faceit_api_key}", "content-type":"json"}
 
-# Printing environment variables
-print(f"ENV VARIABLES: Discord={0}\nFaceit={1}\nMongoDB={2}", token, os.environ.get('FACEIT_API_KEY'), mongoDb)
+# Function that loads the database information
+def load_db():
+    mongoDb = os.environ.get('MONGODB_URI')
+    global server_config_cl
 
-# Function that loads the server config text file
-def load_config():
-    global server_config
-    try:
-        with open('server_config.txt') as json_file:
-            server_config = json.load(json_file)
-            print(f"Succesfully loaded server config files...")
-    except IOError:
-        print("Error reading file, may not exist...")
+    # Creating client connection with database
+    my_client = pymongo.MongoClient(mongoDb)
+    print(f"Client connection info:")
+    print(my_client.server_info)
+
+    # Connecting to default database
+    db = my_client["heroku_gvrmd9mb"]
+
+    # Connecting to bot_info collection in the database
+    server_config_cl = db["bot_info"]
+
+    print(db.list_collection_names())
 
 # Function to check whether a discord server is registered in the server_config dict
 def check_server(ctx):
-    global server_config
+    global server_config_cl
+
+    # Querying database to find discord server with current id
+    results = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(results)
+
     # Checking if current discord server is registered in the dictionary
-    if (str(ctx.guild.id) in server_config):
+    if (results != None):
+        print("discord server registered in db, continuing...")
         return
     
     # If it's not registered, it creates a new entry for that discord server
-    server_config[str(ctx.guild.id)] = { 'hub' : {'hub_id' : '', 'hub_name' : ''}, 'players' : {}}
+    #server_config[str(ctx.guild.id)] = { 'hub' : {'hub_id' : '', 'hub_name' : ''}, 'players' : {}}
+    # Inserts new document for the discord server
+    server_config_cl.insert_one({'discord_server_id' : str(ctx.guild.id), 'hub' : {'hub_id' : '', 'hub_name' : ''}, 'players' : {}, "voice_settings" : { "general" : "Voice Chat", "t1" : "CSGO I", "t2" : "CSGO II" }})
 
     print(f'Created new entry for discord server with ID: {ctx.guild.id}')
-
-# Method to save the config file that holds settings for different servers
-def save_config():
-    try:
-        with open('server_config.txt', 'w') as outfile:
-            json.dump(server_config, outfile)
-            print("Saved config file...")
-    except IOError:
-        print("Error reading file...")
-
-
-load_config()
 
 #key to issue commands with the bot??
 client = commands.Bot(command_prefix = "!")
@@ -103,15 +86,19 @@ async def register(ctx, faceit: str):
 
     # Making sure the server is registered
     check_server(ctx)
+    
+    disc_server = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
 
     # Checking if the faceit name is present in the dictionary
-    if faceit in server_config[str(ctx.guild.id)]['players'].values():
+    if faceit in disc_server['players'].values():
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
         print("tried registering an already previously registered user")
     else:
-        server_config[str(ctx.guild.id)]['players'][str(discord.id)] = faceit # Creating entry into the players dictionary for the new player
+        #server_config[str(ctx.guild.id)]['players'][str(discord.id)] = faceit # Creating entry into the players dictionary for the new player
+        disc_server['players'][str(discord.id)] = faceit # Creating entry into the players dictionary for the new player
+        server_config_cl.update_one({"discord_server_id" : str(ctx.guild.id)}, {"$set":disc_server})
         await ctx.send(f"Faceit user, {faceit}, has been registered under {discord.mention}'s Discord.'")
-        save_config()
+        #save_config()
 
 # Command for registering a faceit hub
 @client.command(aliases = ["registerhub", "rh"])
@@ -151,34 +138,43 @@ async def reghub(ctx, hub_name: str):
     check_server(ctx)
 
     # Saving the hub information to the dictionary
-    server_config[str(ctx.guild.id)]['hub']['hub_id'] = hub_id
-    server_config[str(ctx.guild.id)]['hub']['hub_name'] = hub_name
+    discord_server = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(discord_server)
+    discord_server['hub']['hub_id']   = hub_id
+    discord_server['hub']['hub_name'] = hub_name
 
-    # Saving the server_config dict in a file
-    save_config()
+    # Save to database
+    server_config_cl.update_one({"discord_server_id" : str(ctx.guild.id)}, {"$set":discord_server})
 
     # Printing the success statements
-    print(f"Succesfully registered hub {hub_name} with id {hub_id}...")
+    print(f"Successfully registered hub {hub_name} with id {hub_id}...")
     await ctx.send(f"Succesfully registered hub {hub_name} as the primary hub for this bot.")
 
 
 # Command for moving players to their respective team's voice channel for a CS 10 Man
 @client.command(aliases = ["START"])
 async def start(ctx):
-    # Checking if hte server is registered
+    # Checking if the server is registered
     check_server(ctx)
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
+    
+    # Check to see if all the channels exist
+    if channelExists(ctx, server_info['voice_settings']['t1']) == False or channelExists(ctx, server_info['voice_settings']['t2']) == False or channelExists(ctx, server_info['voice_settings']['general']) == False:
+        await ctx.send("One of the designated voice channels do not exist, make sure voice channels have been properly set before using !start command...")
 
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
-    req_url = url + "hubs/" + server_config[str(ctx.guild.id)]['hub']['hub_id'] + "/matches"
+    req_url = url + "hubs/" + server_info['hub']['hub_id'] + "/matches"
 
-    print(f"Searching for matches in hub {server_config[str(ctx.guild.id)]['hub']['hub_id']} using url {req_url}")
+    print(f"Searching for matches in hub {server_info['hub']['hub_id']} using url {req_url}")
 
     # Searching for the hub requested...
     res = requests.get(req_url, headers=headers, params=my_param)
 
     # Checking if they have registered a hub under this server
-    if server_config[str(ctx.guild.id)]['hub']['hub_id'] == '':
+    if server_info['hub']['hub_id'] == '':
         print("Error, no hub has been registered...")
         await ctx.send("Can't start until a hub is registered under this server...")
         return
@@ -205,10 +201,6 @@ async def start(ctx):
     t1 = get_player_names(match_data['teams']['faction1']['roster'])
     t2 = get_player_names(match_data['teams']['faction2']['roster'])
 
-    #team 1 and team 2 voice channels
-    global vc_t1
-    global vc_t2
-
     print("T1 info")
     print(t1)
 
@@ -219,19 +211,22 @@ async def start(ctx):
     # Traversing the list of members in the voice channel
     for member in channel_members:
         print(f"User: {member.name} | ID: {member.id}")
-        print(server_config[str(ctx.guild.id)]['players'].keys())
+
+        reg_players = server_info['players'].keys()
+
+        print(reg_players)
 
         # Making sure current member is registered
-        if str(member.id) not in server_config[str(ctx.guild.id)]['players'].keys():
+        if str(member.id) not in reg_players:
             print(f"Member {member.name} is not registered...")
             continue
 
         # Checking if they are in team 1
-        if server_config[str(ctx.guild.id)]['players'][str(member.id)] in t1:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = vc_t1))
+        if reg_players[str(member.id)] in t1:
+            await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
             print(f"Moving {member.name} to team 1 channel")
-        elif server_config[str(ctx.guild.id)]['players'][str(member.id)] in t2:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = vc_t2))
+        elif reg_players[str(member.id)] in t2:
+            await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t2'])))
             print(f"Moving {member.name} to team 2 channel")
         else:
             print(f"Player {member.name} is not part of current match")
@@ -239,36 +234,60 @@ async def start(ctx):
 # Command used to move all teams back to one voice channel upon the end of a CS 10 man game
 @client.command(aliases = ["END"])
 async def end(ctx):
-    global vc_gen
+    check_server(ctx)
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
+    print(get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
+
+    # TODO: Add check to see if the voice channels that are set actually exist
 
     # move members in team1 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = "CSGO").members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = vc_gen))
+    for member in get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])).members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['general'])))
 
     # move members in team 2 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = "CSGO II").members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = "Voice Chat"))
+    for member in get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t2'])).members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['general'])))
 
 # Command that changes what the lobby voice channel is
 @client.command(aliases = ["setg"])
 async def setgen(ctx, general):
-    global vc_gen
-    vc_gen = general
-    await ctx.send(f"Lobby voice channel has been changed to {vc_gen}")
+    if channelExists(ctx, general) == False:
+        await ctx.send(f"Voice channel '{general}' does not exist...")
+        return
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(server_info)
+    server_info['voice_settings']['general'] = general
+    server_config_cl.update_one({"discord_server_id" : str(ctx.guild.id)}, {"$set" : server_info})
+    await ctx.send(f"Lobby voice channel has been changed to {general} ") 
 
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set1"])
 async def sett1(ctx, team1):
-    global vc_t1
-    vc_t1 = team1
-    await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
+    if channelExists(ctx, team1) == False:
+        await ctx.send(f"Voice channel '{team1}' does not exist...")
+        return
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(server_info)
+    server_info['voice_settings']['t1'] = team1
+    server_config_cl.update_one({"discord_server_id" : str(ctx.guild.id)}, {"$set" : server_info})
+    await ctx.send(f"Team 1 voice channel has been changed to {team1} ")     
 
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set2"])
 async def sett2(ctx, team2):
-    global vc_t2
-    vc_t2 = team2
-    await ctx.send(f"Team 2 voice channel has been changed to {vc_t2} ")    
+    if channelExists(ctx, team2) == False:
+        await ctx.send(f"Voice channel '{team2}' does not exist...")
+        return
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(server_info)
+    server_info['voice_settings']['t2'] = team2
+    server_config_cl.update_one({"discord_server_id" : str(ctx.guild.id)}, {"$set" : server_info})
+    await ctx.send(f"Team 2 voice channel has been changed to {team2} ")    
 
 # Command that changes the voice channels for General, Team 1 and Team 2
 @client.command()
@@ -276,6 +295,14 @@ async def setvcs(ctx, general, team1, team2):
     await setgen(ctx, general)
     await sett1(ctx, team1)
     await sett2(ctx, team2)
+
+# Function that checks to see if a voice channel exists
+def channelExists(ctx, channel_name):
+    if get(ctx.guild.voice_channels, name = channel_name) == None:
+        return False
+    else:
+        return True
+
 
 # Function that filters out all the other faceit player information and only makes a list of names
 def get_player_names(team):
@@ -287,12 +314,11 @@ def get_player_names(team):
 # Command used to display the list of all registered players
 @client.command(aliases = ["pl"])
 async def playersList(ctx):
-    global server_config
-
     # Making sure the server is registered
     check_server(ctx)
 
-    players = server_config[str(ctx.guild.id)]['players']
+    players = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    players = players['players']
     pString = ""
 
     # Checking case where there are no players registered
@@ -332,31 +358,32 @@ async def player(ctx, name: str):
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
 # Command used to give the general settings of the server
-@client.command()
+@client.command(aliases = ["i"])
 async def info(ctx):
-    global server_config, vc_gen, vc_t1, vc_t2
     check_server(ctx)
 
-    if(server_config[str(ctx.guild.id)]['hub']['hub_id'] == ''):
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+
+    if(server_info['hub'] == ''):
         await ctx.send("There is no hub registered to this server.")
-        print(f"Discord server: {ctx.guild.id} has no registered hub...")
+        print(f"Server has no registered hub...")
     else:
-        await ctx.send(f"Discord server, {ctx.guild.id}, has {server_config[str(ctx.guild.id)]['hub']['hub_name']} registered as its primary hub...")
-        print(f"Discord server {ctx.guild.id} has faceit hub w/ id: {server_config[str(ctx.guild.id)]['hub']['hub_id']} registered as its primary hub...")
+        await ctx.send(f"Server has `{server_info['hub']['hub_name']}` registered as its primary hub...")
+        print(f"Server has faceit hub w/ id: {server_info['hub']['hub_id']} registered as its primary hub...")
 
         print("Printing registered players...")
-        await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
+        await ctx.send(f"Registered Players in {server_info['hub']['hub_name']}:")
         await playersList(ctx)
 
     #Printing the set voice channels
     print("printing lobby voice channel")
-    await ctx.send(f"Lobby Voice Channel:     {vc_gen}")
+    await ctx.send(f"Lobby Voice Channel:     {server_info['voice_settings']['general']}")
 
     print("printing team 1 voice channel")
-    await ctx.send(f"Team 1 Voice Channel:     {vc_t2}")
+    await ctx.send(f"Team 1 Voice Channel:     {server_info['voice_settings']['t1']}")
 
     print("printing team 2 voice channel")
-    await ctx.send(f"Team 2 Voice Channel:     {vc_t1}")
+    await ctx.send(f"Team 2 Voice Channel:     {server_info['voice_settings']['t2']}")
 
 # Command for help command
 @client.command()
@@ -378,5 +405,7 @@ async def help(ctx):
     help_string += "{:10} {:20} {}\n".format("!setvcs", "<voice_channel_name1>, <voice_channel_name2>, <voice_channel_name3>", "Changes the lobby, team 1 and team 2's voice channels respectively")
 
     await ctx.send(help_string)
+
+load_db()
 
 client.run(token)

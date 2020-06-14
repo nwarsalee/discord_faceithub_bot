@@ -95,6 +95,10 @@ async def register(ctx, faceit: str):
     # Making sure the server is registered
     check_server(ctx)
 
+    # Checking if there is a parameter sent from the user.
+    if faceit == None:
+        await ctx.send(f"!reg requires a faceit username parameter...Please try '!reg faceit_username'")
+
     # Checking if the faceit name is present in the dictionary
     if faceit in server_config[str(ctx.guild.id)]['players'].values():
         await ctx.send(f"faceit user, {faceit}, has already been registered.")
@@ -114,6 +118,10 @@ async def reghub(ctx, hub_name: str):
 
     # Searching for the hub requested...
     res = requests.get(req_url, headers=headers, params=my_param)
+
+    # Checking if there is a parameter sent from the user.
+    if hub_name == None:
+        await ctx.send(f"!reghub requires a faceit hub name...Please try '!reghub faceit_hub_name'")
 
     # Making sure the status is 200 (OK)
     if (res.status_code != 200):
@@ -244,29 +252,46 @@ async def end(ctx):
 @client.command(aliases = ["setg"])
 async def setgen(ctx, general):
     global vc_gen
-    vc_gen = general
-    await ctx.send(f"Lobby voice channel has been changed to {vc_gen}")
+
+    # Checking if there is a parameter sent from the user.
+    if vc_gen == None:
+        await ctx.send(f"!setgen requires an existing voice channel name...Please try '!reg <faceit username>' with quotes around the voice channel name...")
+    else:
+        vc_gen = general
+        await ctx.send(f"Lobby voice channel has been changed to {vc_gen}")
 
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set1"])
 async def sett1(ctx, team1):
     global vc_t1
-    vc_t1 = team1
-    await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
+
+    if vc_t1 == None:
+        await ctx.send(f"!sett1 requires an existing voice channel name...Please try '!reg voice channel name' with quotes around the voice channel name...")
+    else:
+        vc_t1 = team1
+        await ctx.send(f"Team 1 voice channel has been changed to {vc_t1} ")    
 
 # Command that changes what team 1's voice channel is
 @client.command(aliases = ["set2"])
 async def sett2(ctx, team2):
     global vc_t2
-    vc_t2 = team2
-    await ctx.send(f"Team 2 voice channel has been changed to {vc_t2} ")    
 
+    if vc_t2 == None:
+        await ctx.send(f"!sett2 requires an existing voice channel name...Please try '!reg voice_channel_name' with quotes around the voice channel name...")
+    else:
+        vc_t2 = team2
+        await ctx.send(f"Team 2 voice channel has been changed to {vc_t1} ")    
 # Command that changes the voice channels for General, Team 1 and Team 2
 @client.command()
 async def setvcs(ctx, general, team1, team2):
-    await setgen(ctx, general)
-    await sett1(ctx, team1)
-    await sett2(ctx, team2)
+
+
+    if general or team1 or team2 == None:
+        await ctx.send(f"!setvcs requires 3 existing voice channel name...Please try '!reg voice_channel_name1, voice_channel_name2, voice_channel_name3' with quotes around the voice channel name...")
+    else:
+        await setgen(ctx, general)
+        await sett1(ctx, team1)
+        await sett2(ctx, team2)
 
 # Function that filters out all the other faceit player information and only makes a list of names
 def get_player_names(team):
@@ -318,6 +343,9 @@ async def player(ctx, name: str):
     print(res.json())
 
     data = res.json()['items'][0]
+
+    if name == None:
+        await ctx.send(f"!player requires a registered player's faceit name...Please try '!player faceit_username'")
 
     # Sending message to Discord text chat
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")

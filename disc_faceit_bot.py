@@ -327,27 +327,30 @@ async def player(ctx, name: str):
 async def info(ctx):
     global server_config, vc_gen, vc_t1, vc_t2
     check_server(ctx)
+    info_string = ""
 
     if(server_config[str(ctx.guild.id)]['hub']['hub_id'] == ''):
-        await ctx.send("There is no hub registered to this server.")
+        info_string += ("There is no hub registered to this server.\n")
         print(f"Discord server: {ctx.guild.id} has no registered hub...")
     else:
-        await ctx.send(f"Discord server, {ctx.guild.id}, has {server_config[str(ctx.guild.id)]['hub']['hub_name']} registered as its primary hub...")
+        info_string +=(f"Discord server, {ctx.guild.id}, has {server_config[str(ctx.guild.id)]['hub']['hub_name']} registered as its primary hub...\n")
         print(f"Discord server {ctx.guild.id} has faceit hub w/ id: {server_config[str(ctx.guild.id)]['hub']['hub_id']} registered as its primary hub...")
 
         print("Printing registered players...")
-        await ctx.send(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:")
+        info_string +=(f"Registered Players in {server_config[str(ctx.guild.id)]['hub']['hub_name']}:\n")
         await playersList(ctx)
 
     #Printing the set voice channels
     print("printing lobby voice channel")
-    await ctx.send(f"Lobby Voice Channel:     {vc_gen}")
+    info_string += (f"Lobby Voice Channel:     {vc_gen}\n")
 
     print("printing team 1 voice channel")
-    await ctx.send(f"Team 1 Voice Channel:     {vc_t2}")
+    info_string += (f"Team 1 Voice Channel:     {vc_t2}\n")
 
     print("printing team 2 voice channel")
-    await ctx.send(f"Team 2 Voice Channel:     {vc_t1}")
+    info_string += (f"Team 2 Voice Channel:     {vc_t1}\n")
+
+    await ctx.send(info_string)
 
 # Command for help command
 @client.command()

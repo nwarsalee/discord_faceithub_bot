@@ -138,8 +138,6 @@ async def reghub(ctx, hub_name: str):
     check_server(ctx)
 
     # Saving the hub information to the dictionary
-    #server_config[str(ctx.guild.id)]['hub']['hub_id'] = hub_id
-    #server_config[str(ctx.guild.id)]['hub']['hub_name'] = hub_name
     discord_server = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
     print(discord_server)
     discord_server['hub']['hub_id']   = hub_id
@@ -156,10 +154,12 @@ async def reghub(ctx, hub_name: str):
 # Command for moving players to their respective team's voice channel for a CS 10 Man
 @client.command(aliases = ["START"])
 async def start(ctx):
-    # Checking if hte server is registered
+    # Checking if the server is registered
     check_server(ctx)
 
     server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
+    
 
     # Building the request url and query parameters
     my_param = {"offset":"0", "limit":"3"}
@@ -220,10 +220,10 @@ async def start(ctx):
 
         # Checking if they are in team 1
         if reg_players[str(member.id)] in t1:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = server_info['voice_settings']['t1']))
+            await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
             print(f"Moving {member.name} to team 1 channel")
         elif reg_players[str(member.id)] in t2:
-            await move(ctx, member, get(ctx.guild.voice_channels, name = server_info['voice_settings']['t2']))
+            await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t2'])))
             print(f"Moving {member.name} to team 2 channel")
         else:
             print(f"Player {member.name} is not part of current match")
@@ -231,15 +231,21 @@ async def start(ctx):
 # Command used to move all teams back to one voice channel upon the end of a CS 10 man game
 @client.command(aliases = ["END"])
 async def end(ctx):
-    server_info = server_config_cl.find_one({"discord_server_id":str(ctx.guild.id)})
+    check_server(ctx)
+
+    server_info = server_config_cl.find_one({"discord_server_id" : str(ctx.guild.id)})
+    print(f"t1: {server_info['voice_settings']['t1']}, t2: {server_info['voice_settings']['t2']}, general: {server_info['voice_settings']['general']}")
+    print(get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
+
+    # TODO: Add check to see if the voice channels that are set actually exist
 
     # move members in team1 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = server_info['voice_settings']['t1']).members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = server_info['voice_settings']['general']))
+    for member in get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])).members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['general'])))
 
     # move members in team 2 chat back to voice channel when game is done
-    for member in get(ctx.guild.voice_channels, name = server_info['voice_settings']['t2']).members:
-        await move(ctx, member, get(ctx.guild.voice_channels, name = server_info['voice_settings']['general']))
+    for member in get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t2'])).members:
+        await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['general'])))
 
 # Command that changes what the lobby voice channel is
 @client.command(aliases = ["setg"])

@@ -210,7 +210,7 @@ async def start(ctx):
         print(f"User: {member.name} | ID: {member.id}")
 
         reg_players = server_info['players'].keys()
-        
+
         print(reg_players)
 
         # Making sure current member is registered
@@ -329,7 +329,7 @@ async def player(ctx, name: str):
     await ctx.send(f"Faceit user {data['nickname']} has ID {data['player_id']}")
 
 # Command used to give the general settings of the server
-@client.command(aliases = ["pl"])
+@client.command(aliases = ["i"])
 async def info(ctx):
     check_server(ctx)
 

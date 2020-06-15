@@ -212,7 +212,7 @@ async def start(ctx):
     for member in channel_members:
         print(f"User: {member.name} | ID: {member.id}")
 
-        reg_players = server_info['players'].keys()
+        reg_players = server_info['players']
 
         print(reg_players)
 

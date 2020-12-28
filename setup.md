@@ -5,7 +5,7 @@
 4. Ensure that every player who will be moved by the bot is registered with the bot. 
 Tell the user to type **"!register <`faceit_name`>"** where `faceit_name` is the faceit name of the user as it appears on faceit.
 5. When the faceit game has been created (i.e. server and map have been chosen and the game is in warmup stage) have one user type **"!start"** in discord. Users from each team will be moved into the respective channels.
-6. When the game is finished, type *"!end"* to move everyone back into the lobby voice channel.
+6. When the game is finished, type **"!end"** to move everyone back into the lobby voice channel.
 
 ### List of Commands
 * !register <`faceit_name`> --- Adds a user to the bots list of Faceit players

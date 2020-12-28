@@ -13,7 +13,7 @@ url = "https://open.faceit.com/data/v4/"
 server_config_cl = None
 
 # Discord Bot token and Faceit API token 
-token = os.environ.get('DISCORD_TOKEN')
+token = os.environ.get('DISCORD_TOKEN_FACEIT')
 
 faceit_api_key = os.environ.get('FACEIT_API_KEY')
 
@@ -22,21 +22,26 @@ headers = {"Authorization" : f"Bearer {faceit_api_key}", "content-type":"json"}
 
 # Function that loads the database information
 def load_db():
-    mongoDb = os.environ.get('MONGODB_URI')
+    mongoDBURI = str(os.environ.get('DB_URI'))
     global server_config_cl
 
-    # Creating client connection with database
-    my_client = pymongo.MongoClient(mongoDb)
+    # Connect to DB hosted on Atlas using DB_URI
+    # NOTE: The password in the URI string may need to be encoded by urllib.quote if it contains the '@' symbol.
+    my_client = pymongo.MongoClient(mongoDBURI)
+    
+    # Print out connection info
     print(f"Client connection info:")
     print(my_client.server_info)
-
+    
     # Connecting to default database
     db = my_client["heroku_gvrmd9mb"]
-
+    
     # Connecting to bot_info collection in the database
     server_config_cl = db["bot_info"]
-
+    
+    print()
     print(db.list_collection_names())
+    print("Successfully connected to MongoDB database...")
 
 # Function to check whether a discord server is registered in the server_config dict
 def check_server(ctx):
@@ -65,7 +70,9 @@ client.remove_command('help')
 #Checks if the bot is ready and if it is it prints Bot is ready
 @client.event
 async def on_ready():
-   print("Bot is ready")
+    # Change bot's status to include the command prefix and call to the help command
+    await client.change_presence(status=discord.Status.online, activity=discord.Game('!help'))
+    print("Bot is ready")
 
 # Command to delete a specified amount of messages
 @client.command()

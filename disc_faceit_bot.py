@@ -234,12 +234,12 @@ async def start(ctx):
             continue
 
         # Checking if they are in team 1
-        if reg_players[str(member.id)] in t1:
+        if reg_players[str(member.id)]["faceit_name"] in t1:
             await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t1'])))
             print(f"Moving {member.name} to team 1 channel")
         
         # Checking if they are in team 2
-        elif reg_players[str(member.id)] in t2:
+        elif reg_players[str(member.id)]["faceit_name"] in t2:
             await move(ctx, member, get(ctx.guild.voice_channels, name = str(server_info['voice_settings']['t2'])))
             print(f"Moving {member.name} to team 2 channel")
         
